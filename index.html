@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BFD & Limbic AI Care Access Flow</title>
+  <style>
+    :root{
+      --bg: #0f172a;           /* slate-900 */
+      --panel: #111827;        /* gray-900 */
+      --card: #0b1220;         /* deep */
+      --ink: #e5e7eb;          /* gray-200 */
+      --muted:#9ca3af;         /* gray-400 */
+      --accent:#60a5fa;        /* blue-400 */
+      --accent-2:#22d3ee;      /* cyan-400 */
+      --line:#1f2937;          /* gray-800 */
+      --success:#34d399;       /* green-400 */
+      --warn:#f59e0b;          /* amber-400 */
+      --danger:#ef4444;        /* red-500 */
+      --radius: 16px;
+      --gap: 18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:radial-gradient(1200px 800px at 65% -10%, #1e293b 0%, #0b1020 50%, #05070d 100%);
+      color:var(--ink); font:500 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      letter-spacing:.2px;
+    }
+    .wrap{max-width:1100px; margin:40px auto; padding:24px;}
+
+    .title{ text-align:center; margin-bottom:24px; }
+    .title h1{margin:0 0 6px; font-weight:800; letter-spacing:.5px; font-size:clamp(22px, 2.6vw, 32px)}
+
+    /* Card-like nodes */
+    .node{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius);
+      padding:16px 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(4px);
+      position:relative;
+    }
+    .node h3{margin:0 0 6px; font-size:16px}
+    .node ul{margin:8px 0 0 18px}
+    .node li{margin:4px 0}
+
+    .tag{ position:absolute; top:-10px; left:-10px; background:var(--accent); color:#020617; border-radius:999px; font-weight:700; padding:4px 10px; font-size:12px; box-shadow:var(--shadow) }
+    .pill{border-radius:999px; text-align:center; font-weight:700}
+
+    /* Vertical stack + connectors */
+    .stack{display:flex; flex-direction:column; align-items:center; gap:var(--gap)}
+    .v-connector{width:2px; background:linear-gradient(180deg, var(--line), rgba(255,255,255,.2)); height:34px; position:relative}
+    .v-connector:after{content:""; position:absolute; bottom:-6px; left:50%; transform:translateX(-50%) rotate(45deg); width:12px; height:12px; border-right:2px solid var(--line); border-bottom:2px solid var(--line);}
+    .v-connector.short{height:22px}
+
+    /* Decision diamond */
+    .diamond{ width:180px; height:180px; display:grid; place-items:center; margin-top:6px; }
+    .diamond::before{ content:""; position:absolute; inset:0; transform:rotate(45deg); background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.08); border-radius:14px; box-shadow:var(--shadow); }
+    .diamond span{display:block; transform:rotate(-45deg); text-align:center; font-weight:800}
+
+    /* Branching canvas */
+    .branch{position:relative; height:78px; margin: 2px 0 18px}
+    .branch .diag{position:absolute; top:0; height:2px; background:var(--line); transform-origin: left top;}
+    .branch .left{ left:50%; width:42%; transform: rotate(135deg); }
+    .branch .right{ left:50%; width:42%; transform: rotate(45deg); }
+    .branch .diag:after{content:""; position:absolute; right:-6px; top:-6px; width:12px; height:12px; border-right:2px solid var(--line); border-bottom:2px solid var(--line); transform: rotate(45deg);}
+    .branch .label{position:absolute; top:20px; font-weight:800; letter-spacing:.6px; font-size:12px; color:var(--ink);}
+    .branch .label.yes{ left:30%; }
+    .branch .label.no{ right:30%; }
+
+    /* Two-column flows */
+    .columns{display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:start}
+    .col{display:flex; flex-direction:column; gap:var(--gap); position:relative}
+    .flow-label{position:absolute; top:-28px; right:0; font-size:12px; color:var(--muted)}
+
+    /* Emphasis colors */
+    .yes-accent{outline:2px solid rgba(52,211,153,.18)}
+    .no-accent{outline:2px solid rgba(245,158,11,.18)}
+
+    /* Small helper badges inside nodes */
+    .node .badge{display:inline-block; font-size:11px; font-weight:800; color:#00121a; background:linear-gradient(90deg, var(--accent), var(--accent-2)); padding:4px 8px; border-radius:999px; margin-bottom:8px}
+
+    /* Options grid */
+    .grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:var(--gap)}
+    .option{padding:14px 16px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01)); box-shadow: var(--shadow)}
+    .option h4{margin:0 0 6px; font-size:15px}
+    .option p{margin:0; font-size:13px; color:var(--muted)}
+    .option.crisis{outline:2px solid rgba(239,68,68,.22)}
+
+    /* Summary section */
+    .summary{margin-top:28px; display:grid; gap:var(--gap)}
+    .summary h3{margin:0 0 4px; font-size:18px}
+    .summary .cards{display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:var(--gap)}
+
+    /* Footer */
+    .legend{margin-top:22px; color:var(--muted); font-size:13px; text-align:center}
+
+    /* Responsive */
+    @media (max-width: 900px){
+      .columns{grid-template-columns:1fr}
+      .branch{height:30px}
+      .branch .left, .branch .right{display:none} /* simplify connectors on narrow screens */
+      .branch .label{display:none}
+      .diamond{width:150px; height:150px}
+    }
+
+    /* Print-friendly */
+    @media print{
+      body{background:#fff; color:#111}
+      .node{box-shadow:none; border-color:#ddd}
+      .v-connector:after, .branch .diag:after{border-color:#777}
+      .branch .diag{background:#777}
+      .tag{box-shadow:none}
+      .option{box-shadow:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="title">
+      <h1>BFD & Limbic AI Care Access Flow</h1>
+    </header>
+
+    <!-- Initial vertical stack -->
+    <section class="stack" aria-label="Entry & Triage">
+      <div class="node" role="group" aria-label="Beneficiary Front Door (BFD) Portal">
+        <span class="tag">Start</span>
+        Beneficiary Front Door (BFD) Portal
+      </div>
+      <div class="v-connector" aria-hidden="true"></div>
+
+      <div class="node" role="group" aria-label="User Login & Triage">User Login &amp; Triage</div>
+      <div class="v-connector" aria-hidden="true"></div>
+
+      <div class="node" role="group" aria-label="Module Selection: Behavioral Health (BH)">Module Selection: <strong>Behavioral Health (BH)</strong></div>
+      <div class="v-connector" aria-hidden="true"></div>
+
+      <div class="node" role="group" aria-label="Condition Assessment">Condition Assessment</div>
+      <div class="v-connector" aria-hidden="true"></div>
+
+      <div class="node diamond" role="group" aria-label="Decision: Behavioral Health Screening?">
+        <span>Behavioral Health Screening?</span>
+      </div>
+    </section>
+
+    <!-- Branch connectors & labels -->
+    <div class="branch" aria-hidden="true">
+      <div class="diag left"></div>
+      <div class="diag right"></div>
+      <span class="label yes">YES</span>
+      <span class="label no">NO</span>
+    </div>
+
+    <!-- Two-column branch flows -->
+    <section class="columns" aria-label="Branch Flows">
+      <!-- YES → Behavioral Health Workflow -->
+      <div class="col">
+        <div class="node yes-accent" role="group" aria-label="Behavioral Health Workflow">
+          <span class="badge">Behavioral Health</span>
+          <strong>Workflow</strong>
+        </div>
+        <div class="v-connector short" aria-hidden="true"></div>
+
+        <div class="node" role="group" aria-label="1. Kintsugi Voice Analysis">
+          <h3>1. Kintsugi Voice Analysis</h3>
+          <ul>
+            <li>During intake calls</li>
+            <li>Passive screening</li>
+            <li>Risk detection</li>
+          </ul>
+        </div>
+        <div class="v-connector" aria-hidden="true"></div>
+
+        <div class="node" role="group" aria-label="2. Limbic Access Chatbot">
+          <h3>2. Limbic Access Chatbot</h3>
+          <ul>
+            <li>Detailed assessment</li>
+            <li>Structured screening</li>
+            <li>Clinical triage</li>
+          </ul>
+        </div>
+        <div class="v-connector" aria-hidden="true"></div>
+
+        <div class="node diamond" role="group" aria-label="Smart Routing">
+          <span>Smart Routing</span>
+        </div>
+        <div class="v-connector short" aria-hidden="true"></div>
+
+        <div class="grid" role="list" aria-label="Care Options Generated">
+          <div class="option crisis" role="listitem" aria-label="988/911 Notification - Crisis/Emergency">
+            <h4>988/911 Notification</h4>
+            <p>Crisis & emergency escalation</p>
+          </div>
+          <div class="option" role="listitem" aria-label="MFLC Referral - Military Family Life Counseling">
+            <h4>MFLC Referral</h4>
+            <p>Military Family Life Counseling</p>
+          </div>
+          <div class="option" role="listitem" aria-label="Chaplain Referral - Spiritual Support">
+            <h4>Chaplain Referral</h4>
+            <p>Spiritual / pastoral support</p>
+          </div>
+          <div class="option" role="listitem" aria-label="Licensed Professional - Therapist/Psychiatrist">
+            <h4>Licensed Professional</h4>
+            <p>Schedule with therapist / psychiatrist</p>
+          </div>
+          <div class="option" role="listitem" aria-label="Limbic 24/7 AI Care - Continuous AI Support">
+            <h4>Limbic 24/7 AI Care</h4>
+            <p>Enrollment for continuous AI support</p>
+          </div>
+        </div>
+        <div class="v-connector" aria-hidden="true" style="margin:18px auto"></div>
+
+        <div class="node pill" role="group" aria-label="Results to EHR and Salesforce">
+          Results → EHR → Salesforce
+        </div>
+      </div>
+
+      <!-- NO → Regular Medical Flow -->
+      <div class="col">
+        <div class="flow-label">NO → Regular Medical Flow</div>
+        <div class="node no-accent" role="group" aria-label="Regular Medical Flow">Regular Medical Flow</div>
+        <div class="v-connector" aria-hidden="true"></div>
+
+        <div class="node" role="group" aria-label="EHR">EHR</div>
+        <div class="v-connector" aria-hidden="true"></div>
+
+        <div class="node" role="group" aria-label="Salesforce">Salesforce</div>
+      </div>
+    </section>
+
+    <!-- Summary section -->
+    <section class="summary" aria-label="BFD and Limbic AI Care Access Flow - Summary">
+      <div class="cards">
+        <div class="node" role="group" aria-label="Patient Journey">
+          <h3>Patient Journey</h3>
+          <ul>
+            <li><strong>Entry Point:</strong> Service member accesses the Beneficiary Front Door (BFD) portal.</li>
+            <li><strong>Module Selection:</strong> Chooses <em>Behavioral Health (BH)</em> module.</li>
+            <li><strong>AI Assessment:</strong> States reason for care; Limbic AI chatbot conducts automated screening, clinical triage, and severity/urgency evaluation.</li>
+            <li><strong>Smart Routing:</strong> System recommends appropriate care pathways based on results.</li>
+          </ul>
+        </div>
+        <div class="node" role="group" aria-label="Key Benefits">
+          <h3>Key Benefits</h3>
+          <ul>
+            <li>Automated triage reduces wait times.</li>
+            <li>24/7 availability through AI.</li>
+            <li>Appropriate care matching based on needs.</li>
+            <li>Seamless integration with military health resources.</li>
+            <li>Immediate crisis intervention routing when needed.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <p class="legend">Tip: Resize the window or print to see responsive & print styling. You can embed this file directly in Confluence/SharePoint as HTML.</p>
+  </div>
+</body>
+</html>
